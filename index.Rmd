@@ -1,30 +1,90 @@
 ---
-title: "my project"
+title: "Computational musicology 2025"
 author: "Mees"
-date: "2025-02-12"
-output: html_document
+date: "2025-02-21"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    theme: paper
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(plotly)
+library(Cairo)
+library(ggtext)
 ```
 
-## R Markdown
+### Introduction of my storyboard
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Welcome to my storyboard for the computational musicology course. With this course 1 made 2 songs. I created these songs using the generative AI tool Stable Audio. I simply wrote a short prompt for each track to guide the style and mood.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+**Track 1**  
+Prompt:  
+```
+3 minutes Pixelwave, jazz fusion, retro 8-bit melodies, smooth synths, glitch effects, complex rhythms, futuristic vibes, melodic improvisation, digital textures, ambient soundscapes, quirky transitions
 ```
 
-## Including Plots
+```{r, results='asis', echo=FALSE}
+cat('<audio controls>
+  <source src="mees-k-1.mp3" type="audio/mpeg">
+</audio>')
+```
 
-You can also embed plots, for example:
+**Track 2**  
+Prompt:  
+```
+Classical Grunge, raw grunge guitar, symphonic strings, orchestral arrangements, distorted power chords, melancholic melodies, classical structure, gritty atmosphere, dynamic contrast, emotional intensity.
+```
+
+```{r, results='asis', echo=FALSE}
+cat('<audio controls>
+  <source src="mees-k-2.mp3" type="audio/mpeg">
+</audio>')
+```
+
+### Visualisation of the corpus features
 
 ```{r pressure, echo=FALSE}
-plot(pressure)
+df <- read.csv("compmus2025.csv", stringsAsFactors = FALSE)
+
+df_long <- df %>%
+  pivot_longer(
+    cols = -filename,
+    names_to = "feature",
+    values_to = "value"
+  ) %>%
+  group_by(feature) %>%
+  mutate(norm_value = (value - min(value)) / (max(value) - min(value))) %>%
+  ungroup()
+
+pl <- ggplot() +
+  geom_tile(data = df_long, aes(x = feature, y = filename, fill = norm_value,
+                                text = paste("Feature:", feature,
+                                             "<br>Song:", filename,
+                                             "<br>Original value:", value)),
+            color = "grey90") +
+  scale_fill_gradient(low = "white", high = "blue") +
+  labs(x = "Feature", y = "Song") +
+  scale_y_discrete(labels = function(x) {
+    ifelse(x %in% c("mees-k-1", "mees-k-2"),
+           paste0("<span style='color:red;'>", x, "</span>"),
+           x)
+  }) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_markdown(size = 7),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggplotly(pl, tooltip = "text")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+*** 
+
+This heatmap shows the normalized values of different features for 90 songs. Each tile’s color represents the scaled value (from 0 to 1) of a feature, making comparisons fair even when the original numbers differ a lot. Hover over a tile to see the real value. My tracks, "mees-k-1" and "mees-k-2", are highlighted in red.
+
+
+### Conclusion
+In conclusion, there is significant variance among the tracks produced by my peers. I look forward to sharing more detailed visualizations and insights as I continue exploring these musical features.
