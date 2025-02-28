@@ -14,7 +14,50 @@ library(tidyverse)
 library(plotly)
 library(Cairo)
 library(ggtext)
+source("compmus.R")
+library(rjson)
 ```
+
+### Chromagram of my 2 songs.
+
+```{r, echo=FALSE}
+chroma1 <- compmus_chroma("mees-k-1.json", norm = "identity") %>% 
+  mutate(song = "mees-k-1")
+chroma2 <- compmus_chroma("mees-k-2.json", norm = "identity") %>% 
+  mutate(song = "mees-k-2")
+
+chromagram <- bind_rows(chroma1, chroma2)
+
+pl <- ggplot(chromagram, aes(x = time, y = factor(pc), fill = value)) +
+  geom_tile() +
+  facet_wrap(~ song, ncol = 1) +
+  scale_fill_viridis_c() +
+  labs(x = "Time (s)", y = "Pitch Class", title = "Chromagram of My Songs") +
+  theme_minimal()
+
+
+ggplotly(pl)
+```
+
+***
+
+
+### Self-similarity matrices of my 2 songs!
+
+```{r, echo=FALSE}
+chroma_df <- compmus_chroma("mees-k-1.json", norm = "identity")
+
+# Compute chroma-based self-similarity matrix
+sim_chroma <- compmus_self_similarity(chroma_df, value, distance = "euclidean")
+
+ggplot(sim_chroma, aes(x = xtime, y = ytime, fill = d)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  labs(title = "Chroma-based Self-Similarity", x = "Time (s)", y = "Time (s)") +
+  theme_minimal()
+```
+
+
 
 ### Introduction of my storyboard
 
