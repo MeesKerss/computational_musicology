@@ -1,7 +1,7 @@
 ---
 title: "Computational musicology 2025"
 author: "Mees"
-date: "2025-02-21"
+date: "2025-03-30"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
@@ -165,6 +165,8 @@ ggplotly(chordogram)
 
 ***
 
+These chordograms are very similar to the chromagrams we saw earlier. In this plot, you can see that my first song uses a wide variety of chords, with the final part being especially chaotic. In my second song, the structure is clearer, with a few chords repeated throughout. The chordogram of my second song also shows the sections where the electric guitar is present.
+
 
 ### Histogram of tempo of the class corpus
 
@@ -183,6 +185,7 @@ ggplotly(tempo_histogram)
 ```
 
 ***
+This plot shows a histogram of the tempos in the class corpus. My songs have tempos of 83 and 110 bpm, which are similar to those of the other songs. There are also five songs with very low tempos, estimated to be around 30 bpm. Because this value is rare, I believe the software may have made a mistake in estimating these tempos.
 
 ### Tempograms of my own 2 songs
 
@@ -190,9 +193,12 @@ ggplotly(tempo_histogram)
 #From tempogram.R
 tempogram <- readRDS("tempogram.rds")
 ggplotly(tempogram)
+#83 110
 ```
 
 ***
+These are the tempograms of my own 2 songs. These plots are really not that interesting because there are no tempo changes in my songs. 
+
 
 ### Hierarchical clustering of the class corpus
 
@@ -254,13 +260,27 @@ dendro <- ggplot() +
                         hjust = 1, angle = 90, 
                         fill = NA, label.color = NA, size = 3) +
   coord_cartesian(clip = "off") +
-  theme_minimal()
+  theme_minimal() +
+  theme(plot.margin = margin(t = 10, r = 50, b = 50, l = 10))
 
-ggplotly(dendro)
+
+dendro
 ```
 
 ***
 
+My first goal was to create outliers in the class corpus, making the clustering more interesting. My songs are indicated by the red text. However, in this dendrogram, we can see that my songs are very similar to other songs in the corpus, so my goal was not achieved. One outlier in the set is the song "lo-l-1." You can listen to it below.
+
+```{r, results='asis', echo=FALSE}
+cat('<audio controls>
+  <source src="lo-l-1.mp3" type="audio/mpeg">
+</audio>')
+```
+
+If you listen to the song, you'll notice that it is a unique track with a slow pace and many influences from classical music.
+
 ### Conclusion
 
-In conclusion, there is significant variance among the tracks produced by my peers. I look forward to sharing more detailed visualizations and insights as I continue exploring these musical features.
+Overall, my analyses show that while my songs have some unique features, they are not extreme outliers in the class corpus. The chromagrams and self-similarity matrices reveal differences between my two tracks, one being more varied and the other more structured, but the clustering results indicate that my songs still group with many other similar tracks. If I had the chance to try this again I think I need to focus more on the high level features of my songs to stand out better in the class corpus.
+
+I really enjoyed exploring and listening to the songs created by my classmates. It was fun to see so many creative approaches and learn from their unique styles.
