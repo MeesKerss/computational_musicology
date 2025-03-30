@@ -16,95 +16,13 @@ library(Cairo)
 library(ggtext)
 source("compmus.R")
 library(rjson)
+library(tidymodels)
+library(ggdendro)
 ```
-
-### Tempograms of my own 2 songs
-```{r, echo=FALSE}
-#From tempogram.R
-tempogram <- readRDS("tempogram.rds")
-ggplotly(tempogram)
-
-```
-
-***
-
-Template
-
-
-### Histogram of tempo of the class corpus
-```{r, echo=FALSE}
-class_corpus <- read_csv("compmus2025.csv")
-tempo_histogram <- ggplot(class_corpus, aes(x = tempo)) +
-  geom_histogram(bins = 20, fill = "steelblue", color = "black") +
-  labs(
-    title = "Histogram of Tempo for the Class Corpus",
-    x = "Tempo (BPM)",
-    y = "Frequency"
-  ) +
-  theme_minimal()
-
-
-ggplotly(tempo_histogram)
-```
-
-***
-Template
-
-### Key and Chord estimation of my 2 songs.
-```{r, echo=FALSE}
-#From chordogram.R
-chordogram <- readRDS("chordogram.rds")
-ggplotly(chordogram)
-```
-
-***
-
-Placeholder...
-
-### Chromagram of my 2 songs.
-
-```{r, echo=FALSE}
-chroma1 <- compmus_chroma("mees-k-1.json", norm = "identity") %>% 
-  mutate(song = "mees-k-1")
-chroma2 <- compmus_chroma("mees-k-2.json", norm = "identity") %>% 
-  mutate(song = "mees-k-2")
-
-chromagram <- bind_rows(chroma1, chroma2)
-
-pl <- ggplot(chromagram, aes(x = time, y = factor(pc), fill = value)) +
-  geom_tile() +
-  facet_wrap(~ song, ncol = 1) +
-  scale_fill_viridis_c() +
-  labs(x = "Time (s)", y = "Pitch Class", title = "Chromagram of My Songs") +
-  theme_minimal()
-
-
-ggplotly(pl)
-```
-
-***
-
-Placeholder...
-
-
-### Self-similarity matrices of my 2 songs!
-
-```{r, echo=FALSE}
-chroma_df <- compmus_chroma("mees-k-1.json", norm = "identity")
-sim_chroma <- compmus_self_similarity(chroma_df, value, distance = "euclidean")
-
-ggplot(sim_chroma, aes(x = xtime, y = ytime, fill = d)) +
-  geom_tile() +
-  scale_fill_viridis_c() +
-  labs(title = "Chroma-based Self-Similarity", x = "Time (s)", y = "Time (s)") +
-  theme_minimal()
-```
-
-
 
 ### Introduction of my storyboard
 
-Welcome to my storyboard for the computational musicology course. With this course 1 made 2 songs. I created these songs using the generative AI tool Stable Audio. I simply wrote a short prompt for each track to guide the style and mood.
+Welcome to my storyboard for the computational musicology course. With this course I made 2 songs. I created these songs using the generative AI tool Stable Audio. I simply wrote a short prompt for each track to guide the style and mood.
 
 **Track 1**  
 Prompt:  
@@ -129,6 +47,8 @@ cat('<audio controls>
   <source src="mees-k-2.mp3" type="audio/mpeg">
 </audio>')
 ```
+
+I wanted to create some unique songs that would maybe show up as outliers in the class corpus. I've tried to mix a lot of genres and chaotic terms into my prompts. 
 
 ### Visualisation of the corpus features
 
@@ -167,10 +87,180 @@ pl <- ggplot() +
 ggplotly(pl, tooltip = "text")
 ```
 
-*** 
+***
+This heatmap shows the normalized values of different features for 90 songs. Each tile’s color represents the scaled value (from 0 to 1) of a feature, making comparisons fair even when the original numbers differ a lot. Hover over a tile to see the real value. My tracks, "mees-k-1" and "mees-k-2", are highlighted in red. My 2 songs don't really have extreme values compared to the other songs.
 
-This heatmap shows the normalized values of different features for 90 songs. Each tile’s color represents the scaled value (from 0 to 1) of a feature, making comparisons fair even when the original numbers differ a lot. Hover over a tile to see the real value. My tracks, "mees-k-1" and "mees-k-2", are highlighted in red.
+### Chromagram of my 2 songs
 
+```{r chromagram, echo=FALSE}
+chroma1 <- compmus_chroma("mees-k-1.json", norm = "identity") %>% 
+  mutate(song = "mees-k-1")
+chroma2 <- compmus_chroma("mees-k-2.json", norm = "identity") %>% 
+  mutate(song = "mees-k-2")
+
+chromagram <- bind_rows(chroma1, chroma2)
+
+pl <- ggplot(chromagram, aes(x = time, y = factor(pc), fill = value)) +
+  geom_tile() +
+  facet_wrap(~ song, ncol = 1) +
+  scale_fill_viridis_c() +
+  labs(x = "Time (s)", y = "Pitch Class", title = "Chromagram of My Songs") +
+  theme_minimal()
+
+ggplotly(pl)
+```
+
+***
+These are the chromagrams of my two songs. You can see that my first song has a lot of variance in the pitch classes. If you listen to "mees-k-1," you can hear where this comes from. With my second song, a more defined pattern can be seen. If you listen to that song, it may also sound less random and more structured.
+
+### Self-similarity chroma matrix of my first song
+
+```{r selfsim, echo=FALSE}
+chroma_df <- compmus_chroma("mees-k-1.json", norm = "identity")
+sim_chroma <- compmus_self_similarity(chroma_df, value, distance = "euclidean")
+
+selfsim <- ggplot(sim_chroma, aes(x = xtime, y = ytime, fill = d)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  labs(title = "Chroma-based Self-Similarity for mees-k-1", x = "Time (s)", y = "Time (s)", fill = NULL) +
+  theme_minimal()
+
+selfsim
+```
+
+***
+
+To get a closer look at the randomness of my first song, we can examine the self-similarity matrix. We observe that there are no continuous diagonal lines running through the plot, which indicates that there are no obvious repeating patterns in the song's chroma. However, you can see a slight checkerboard pattern. This means that even though the song doesn't have clear, repeating sections, some parts of it sound very similar to themselves.
+
+### Self-similarity timbre matrix of my second song
+
+```{r selfsimtimbre, echo=FALSE}
+"mees-k-2.json" |>
+  compmus_mfccs(norm = "identity") |>
+  compmus_self_similarity(
+    feature = mfcc,
+    distance = "euclidean"
+  ) |>
+  ggplot(aes(x = xtime, y = ytime, fill = d)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  geom_tile() +
+  labs(x = "Time (s)", y = "Time (s)", fill = NULL, 
+       title = "Timbre-based Self-Similarity Matrix for mees-k-2") +
+  theme_minimal()
+```
+
+***
+
+By observing the self-similarity matrix for timbre, we can see that the song contains two large patches with high similarity. This indicates that these parts of the song have many similar timbre-based features. When listening to the song, we can also hear that these segments prominently feature the electric guitar.
+
+
+### Key and Chord estimation of my 2 songs
+
+```{r keyesti, echo=FALSE}
+#From chordogram.R
+chordogram <- readRDS("chordogram.rds")
+ggplotly(chordogram)
+```
+
+***
+
+
+### Histogram of tempo of the class corpus
+
+```{r tempohist, echo=FALSE}
+class_corpus <- read_csv("compmus2025.csv")
+tempo_histogram <- ggplot(class_corpus, aes(x = tempo)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "black") +
+  labs(
+    title = "Histogram of Tempo for the Class Corpus",
+    x = "Tempo (BPM)",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+ggplotly(tempo_histogram)
+```
+
+***
+
+### Tempograms of my own 2 songs
+
+```{r tempogram, echo=FALSE}
+#From tempogram.R
+tempogram <- readRDS("tempogram.rds")
+ggplotly(tempogram)
+```
+
+***
+
+### Hierarchical clustering of the class corpus
+
+```{r dendro, echo=FALSE}
+
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit |> 
+    collect_predictions() |> 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
+
+get_pr <- function(fit) {
+  fit |> 
+    conf_mat_resampled() |> 
+    group_by(Prediction) |> mutate(precision = Freq / sum(Freq)) |> 
+    group_by(Truth) |> mutate(recall = Freq / sum(Freq)) |> 
+    ungroup() |> filter(Prediction == Truth) |> 
+    select(class = Prediction, precision, recall)
+}  
+
+compmus2025 <- read_csv("compmus2025.csv")
+
+cluster_juice <-
+  recipe(
+    filename ~
+      arousal +
+      danceability +
+      instrumentalness +
+      tempo +
+      valence,
+    data = compmus2025
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors()) |> 
+  prep(compmus2025) |>
+  juice() |>
+  column_to_rownames("filename")
+
+
+compmus_dist <- dist(cluster_juice, method = "euclidean")
+
+
+hc <- hclust(compmus_dist, method = "single")
+ddata <- dendro_data(hc)
+
+my_songs <- c("mees-k-1", "mees-k-2")
+
+ddata$labels <- ddata$labels %>% 
+  mutate(label = if_else(label %in% my_songs,
+                         paste0("<span style='color:red;'>", label, "</span>"),
+                         label))
+
+dendro <- ggplot() +
+  geom_segment(data = ddata$segments, 
+               aes(x = x, y = y, xend = xend, yend = yend)) +
+  ggtext::geom_richtext(data = ddata$labels, 
+                        aes(x = x, y = y, label = label),
+                        hjust = 1, angle = 90, 
+                        fill = NA, label.color = NA, size = 3) +
+  coord_cartesian(clip = "off") +
+  theme_minimal()
+
+ggplotly(dendro)
+```
+
+***
 
 ### Conclusion
+
 In conclusion, there is significant variance among the tracks produced by my peers. I look forward to sharing more detailed visualizations and insights as I continue exploring these musical features.

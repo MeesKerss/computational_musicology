@@ -105,4 +105,4 @@ pl_chords <- ggplot(chord_matches, aes(x = time, y = name, fill = d)) +
   facet_wrap(~ song, ncol = 1) +
   theme_minimal()
 
-saveRDS(ggplotly(pl_chords), "chordogram.rds"))
+saveRDS(ggplotly(pl_chords), "chordogram.rds")
